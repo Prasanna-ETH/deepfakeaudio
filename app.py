@@ -67,7 +67,7 @@ demo = gr.Interface(
     fn=classify_audio,
     inputs=gr.Audio( type="filepath"),
     outputs="text",
-    title="Wav2Vec2 Deepfake Detection",
+    title="Sigma One - Deepfake Audio Detection",
     description="Upload an audio sample to check if it is fake or real."
 )
 
