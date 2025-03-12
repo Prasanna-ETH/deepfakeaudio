@@ -1,0 +1,6 @@
+transformers
+torch
+torchaudio
+soundfile
+gradio>=3.30.0
+
