@@ -1,111 +1,138 @@
----
-title: Gaudio
-emoji: 👀
-colorFrom: red
-colorTo: indigo
-sdk: gradio
-sdk_version: 5.20.1
-app_file: app.py
-pinned: false
----
+# Sigma One - Deepfake Audio Detection  
 
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
-
-
-# 🎭 Deepfake Audio - Gaudio 🎶  
-
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)  
-🚀 **Gaudio** is an AI-powered deepfake audio generation tool that allows users to create synthetic voices with high accuracy. It leverages cutting-edge machine learning models to produce realistic and natural-sounding speech.
+🔍 **Project Overview**  
+Sigma One is an AI-powered Deepfake Audio Detection system. It allows users to upload an audio file and determine whether it is "real" or "fake" using a pre-trained AI model. The model is built using state-of-the-art deep learning techniques and hosted with a simple **Gradio** interface for easy access.  
 
 ---
 
-## 📌 Features  
+## 🚀 Technologies Used & Their Purpose  
 
-✅ **Realistic Voice Cloning** – Convert text into natural-sounding speech  
-✅ **Deep Learning Models** – Utilizes state-of-the-art AI for voice synthesis  
-✅ **Customizable Parameters** – Control pitch, speed, and tone  
-✅ **Multi-Language Support** – Generate speech in different languages  
-✅ **User-Friendly Interface** – Simple and intuitive to use  
-
----
-
-## 🎯 Project Overview  
-
-Gaudio is designed to generate human-like speech using AI deepfake techniques. It takes text input and synthesizes audio with realistic intonations and emotions. This tool is useful for various applications such as content creation, voiceovers, entertainment, and more.  
-
-💡 **Why Gaudio?**  
-- Enhances user engagement with AI-generated voices  
-- Automates voice production for businesses and individuals  
-- Supports multiple audio formats  
+| Technology                  | Purpose |
+|-----------------------------|---------|
+| **Python**                  | Main programming language for the project. |
+| **PyTorch**                 | Deep learning framework used for loading the model and making predictions. |
+| **Hugging Face Transformers** | Provides pre-trained deep learning models for audio classification. |
+| **Torchaudio**              | Library for loading and processing audio files. |
+| **Gradio**                  | Creates a user-friendly web interface for uploading and classifying audio files. |
 
 ---
 
-## 🛠️ Installation  
+## 📌 Breakdown of the Code & Its Purpose  
+
+### 1️⃣ Model Selection & Loading  
+
+```python
+from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
+
+MODEL_ID = "Zeyadd-Mostaffa/wav2vec_checkpoints"
+feature_extractor = AutoFeatureExtractor.from_pretrained(MODEL_ID)
+model = AutoModelForAudioClassification.from_pretrained(MODEL_ID)
+model.eval()
+```
+- **feature_extractor**: Converts raw audio into a format suitable for deep learning.  
+- **model**: Loads the pre-trained deepfake detection model.  
+- **model.eval()**: Puts the model in evaluation mode, meaning it won’t learn new data but only make predictions.  
+
+---
+
+### 2️⃣ Audio Processing  
+
+```python
+import torchaudio.transforms as T
+waveform, sr = torchaudio.load(audio_file)
+
+if sr != 16000:
+    resampler = T.Resample(sr, 16000)
+    waveform = resampler(waveform)
+```
+- **Torchaudio** loads audio files (WAV, MP3, etc.).  
+- **waveform**: The audio data in numerical form.  
+- **sr**: Sample rate (how many times per second the audio is sampled).  
+- **Resampling** ensures the audio matches the model’s expected 16,000 Hz sample rate.  
+
+---
+
+### 3️⃣ Feature Extraction & Prediction  
+
+```python
+inputs = feature_extractor(
+    waveform.numpy(),
+    sampling_rate=sr,
+    return_tensors="pt",
+    truncation=True,
+    max_length=int(16000 * 6.0),  # 6-second max
+)
+
+with torch.no_grad():
+    logits = model(inputs.input_values).logits
+    pred_id = torch.argmax(logits, dim=-1).item()
+```
+- Converts the audio into numerical features that the model understands.  
+- Truncates input to **6 seconds** to keep it within model limits.  
+- **Predicts** whether the audio is fake or real using the highest probability label.  
+
+---
+
+### 4️⃣ User Interface with Gradio  
+
+```python
+import gradio as gr
+
+def classify_audio(audio_file):
+    # Function that processes and classifies audio
+
+demo = gr.Interface(
+    fn=classify_audio,
+    inputs=gr.Audio(type="filepath"),
+    outputs="text",
+    title="Sigma One - Deepfake Audio Detection",
+    description="Upload an audio sample to check if it is fake or real."
+)
+
+if __name__ == "__main__":
+    demo.launch()
+```
+- **Gradio** provides a simple web interface.  
+- Users can **upload an audio file** and get a classification result.  
+- The model predicts whether the **audio is real or fake**.  
+
+---
+
+## 🎯 Why This Project is Useful?  
+
+✅ **Detects Deepfake Audio**: Helps prevent misinformation by identifying fake voices.  
+✅ **AI-Powered**: Uses a pre-trained deep learning model for high accuracy.  
+✅ **Easy to Use**: No programming knowledge needed – just upload an audio file!  
+✅ **Fast & Lightweight**: Runs efficiently on both **CPU & GPU**.  
+
+---
+
+## 🛠️ How to Use?  
 
 1️⃣ **Clone the repository**  
-```bash
+
+```sh
 git clone https://github.com/Prasanna-ETH/deepfakeaudio.git
-cd deepfakeaudio
 ```
 
 2️⃣ **Install dependencies**  
-```bash
-pip install -r requirements.txt
+
+```sh
+pip install torch torchaudio transformers gradio
 ```
 
-3️⃣ **Run the application**  
-```bash
+3️⃣ **Run the project**  
+
+```sh
 python app.py
 ```
 
----
-
-## 📷 Screenshots  
-
-![Demo](https://via.placeholder.com/800x400.png?text=Deepfake+Audio+Demo)  
-*A snapshot of Gaudio in action!*
+4️⃣ **Open the Gradio interface and upload an audio file** to check if it’s fake or real!  
 
 ---
 
-## 🧠 Technologies Used  
 
-- 🐍 **Python** – Core programming language  
-- 🎛 **Gradio** – Web-based UI framework  
-- 🔊 **Deep Learning Models** – AI for speech synthesis  
-- 🏗 **Hugging Face Spaces** – Hosting platform  
+🔗 **Check out the project**: [GitHub Repository](https://github.com/Prasanna-ETH/deepfakeaudio)  
 
----
 
-## 🏆 Use Cases  
-
-💬 **Voice Assistants** – AI-powered virtual voices  
-🎙 **Audiobook Narration** – Generate human-like storytelling  
-📢 **Content Creation** – Personalized voiceovers for videos  
-🎭 **Entertainment** – Synthetic voice effects  
-
----
-
-## 🤝 Contributing  
-
-🚀 We welcome contributions! Follow these steps:  
-1. Fork the repository  
-2. Create a new branch (`feature-newvoice`)  
-3. Commit your changes (`git commit -m "Added new voice feature"`)  
-4. Push to your branch (`git push origin feature-newvoice`)  
-5. Open a Pull Request  
-
----
-
-## 📜 License  
-
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 📞 Contact  
-
-👤 **Prasanna-ETH**  
-📧 Email: [jothimuraliprasannna@gmail.com]  
-🌐 GitHub: [Prasanna-ETH](https://github.com/Prasanna-ETH)  
-
-🔥 If you like this project, don't forget to ⭐ star the repo! 🔥  
+📌 **Developed by** Prasanna-ETH 🎯  
